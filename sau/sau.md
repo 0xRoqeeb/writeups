@@ -67,7 +67,9 @@ i opened it in my web browser and there's a webapp called request baskets, on th
 
 
 i started poking around the site to find out how it works, it's an application that allows you to create a basket which gives you a url and any request made to that url will be collected in your basket hence the name requests basket  
-![2023-07-25_16-22](https://github.com/0xRoqeeb/writeups/assets/49154037/c26f91bd-a255-4166-aa77-929f6eb2d1ae)  
+
+![newbasket](https://github.com/0xRoqeeb/writeups/assets/49154037/e954d827-d88d-44f7-80a1-6e64e18f2e59)
+
 
 i tested GET and POST requests on the url using curl i didnt get a response in my terminal but the requests were collected in the request basket
 
