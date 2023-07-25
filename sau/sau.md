@@ -57,10 +57,11 @@ PORT      STATE    SERVICE REASON      VERSION
 |     Date: Tue, 25 Jul 2023 05:29:07 GMT
 |_    Content-Length: 0
 ```
-I will start enumeration from port 55555 from our scan we can see there's a webserver running on that port,i opened it in my web browser and there's a webapp called request baskets, on the bottom left there's a version number
+I will start enumeration from port 55555, from our scan we can see there's a webserver running on that port  
+i opened it in my web browser and there's a webapp called request baskets, on the bottom left there's a version number
 ![homepage](https://github.com/0xRoqeeb/writeups/assets/49154037/5e98fb0e-a7ff-41d3-9512-da0b43de3894)
 
-i started poking around the site to find out how it works, it's a application that allows you to create a basket with gives you a url and any request made to that url will be collected on your basket hence the name requests basket
+i started poking around the site to find out how it works, it's an application that allows you to create a basket with gives you a url and any request made to that url will be collected in your basket hence the name requests basket
 
 so i tested GET and POST requests on the url using curl i didnt get a response in my terminal but the requests were collected in the request basket
 
