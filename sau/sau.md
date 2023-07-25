@@ -118,7 +118,13 @@ curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward
  or we can edit our existing basket from the basket configuration page
  ![damn](https://github.com/0xRoqeeb/writeups/assets/49154037/f501ad73-66ec-474e-bf2f-db936cfa8363)
 
- 
+trying to access the login page from the browser gives us this response, so we'll have to use curl from here
+![2023-07-25_08-14](https://github.com/0xRoqeeb/writeups/assets/49154037/a6d098d7-106f-48fd-b1b9-10d61294e188)
+
+getting a revrerse shell
+
+
+
 
 
 
