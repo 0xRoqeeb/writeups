@@ -1,11 +1,15 @@
 # Hack The Box - Sau Writeup
 by Roqeeb
-
+#introduction
+Hello welcome to my first-ever published writeup,Today we'll be rooting and easy rated box from hackthebox, i was able to learn new things from this box and i found it interesting, i hope you enjoy it too.  
+Let's go
 # Information Gathering
 ## Nmap
+i used nmap to scan the ip address with th
 ```
-nmap -sC -sV 10.10.11.224 -vvv -T3 -oN nmap
+nmap -sC -sV 10.10.11.224 -p- -vvv -T3 -oN nmap
 ```
+
 From our scan there are two open ports opened ports 22 and 55555 ,due the speed of my scan i also got some false positives port 80 and 6003 with the ‘filtered’ state, i will be ignoring because accessing them provides no response.
 
 
@@ -61,9 +65,10 @@ I will start enumeration from port 55555, from our scan we can see there's a web
 i opened it in my web browser and there's a webapp called request baskets, on the bottom left there's a version number
 ![homepage](https://github.com/0xRoqeeb/writeups/assets/49154037/5e98fb0e-a7ff-41d3-9512-da0b43de3894)
 
-i started poking around the site to find out how it works, it's an application that allows you to create a basket which gives you a url and any request made to that url will be collected in your basket hence the name requests basket
+i started poking around the site to find out how it works, it's an application that allows you to create a basket which gives you a url and any request made to that url will be collected in your basket hence the name requests basket  
+![2023-07-25_16-22](https://github.com/0xRoqeeb/writeups/assets/49154037/c26f91bd-a255-4166-aa77-929f6eb2d1ae)  
 
-so i tested GET and POST requests on the url using curl i didnt get a response in my terminal but the requests were collected in the request basket
+i tested GET and POST requests on the url using curl i didnt get a response in my terminal but the requests were collected in the request basket
 
 ```console
 ┌──(mofe㉿mofe)-[~]
@@ -95,7 +100,7 @@ but i'll be doing it directly from the web application, to do that we navigate t
 ![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/d181f742-6a23-4fa0-84e5-889fb4bf1c7f)
 
 on the configuration page we set the fields as follows:-    
-***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward that website to our basket url  
+***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward our requests from the basket url to the hidden webpage  
 
 ***Proxy Response*** : *true* ( i set this field to false as the POC stated but i didn't get a response, it only made sense to set it to true)  
 ***Expand Forward Path*** : *true*  
