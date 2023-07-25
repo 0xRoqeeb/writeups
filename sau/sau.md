@@ -169,14 +169,14 @@ Once we get initial access the road to root on sau is a piece of cake
 
 running the command sudo -l to see the commands our current user can run
 ![2023-07-25_08-19](https://github.com/0xRoqeeb/writeups/assets/49154037/b0687b33-f3e4-474e-af63-901892f95980)  
-we can run */usr/bin/systemctl status trail.service* as root and **NOPASSWD** means we can invoke the sudo command without a password
+we can run */usr/bin/systemctl status trail.service* as root and **NOPASSWD** means we can invoke the sudo command without a password  
 I checked gtfobins for the binary we have access to and luckily there's an entry for [systemctl](https://gtfobins.github.io/gtfobins/systemctl/)  
 
-![2023-07-25_08-25_1](https://github.com/0xRoqeeb/writeups/assets/49154037/29ad70a9-90ff-4308-86ac-5a93df524b7f)
-Let's run the command ```/usr/bin/systemctl status trail.service```
+![2023-07-25_08-25_1](https://github.com/0xRoqeeb/writeups/assets/49154037/29ad70a9-90ff-4308-86ac-5a93df524b7f)  
+Let's run the command ```sudo /usr/bin/systemctl status trail.service```
 and input “!sh” to spawn a shell
 
-![2023-07-25_08-29](https://github.com/0xRoqeeb/writeups/assets/49154037/af301225-b263-45ec-94c9-b699ecb2573f) 
+![2023-07-25_08-29](https://github.com/0xRoqeeb/writeups/assets/49154037/af301225-b263-45ec-94c9-b699ecb2573f)   
 and we're root:)
 
 
