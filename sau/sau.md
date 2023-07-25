@@ -77,7 +77,8 @@ i tested GET and POST requests on the url using curl i didnt get a response in m
 ┌──(mofe㉿mofe)-[~]
 └─$ curl -X POST http://10.10.11.224:55555/fourth
 ```
-![eq](https://github.com/0xRoqeeb/writeups/assets/49154037/a6bd4d84-8136-4da2-8ad2-3e4fcf09b3ee)
+![eq](https://github.com/0xRoqeeb/writeups/assets/49154037/d17393da-513c-4269-8910-cab229433106)
+
 
 # Vulnerability Assessment
 
@@ -106,12 +107,14 @@ on the configuration page we set the fields as follows:-
 
 ***Proxy Response*** : *true* ( i set this field to false as the POC stated but i didn't get a response, it only made sense to set it to true)  
 ***Expand Forward Path*** : *true*  
-![2023-07-25_11-20](https://github.com/0xRoqeeb/writeups/assets/49154037/80228ce7-f4a8-4c4d-b114-0077256fe719)
+![2023-07-25_07-55](https://github.com/0xRoqeeb/writeups/assets/49154037/7c68fe7a-8e65-4be6-8000-a3718e657963)
+
 
 after that click apply to save changes
 
 now we access our basket through the url again and this time we're seeing something different we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
-![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/4565fc37-6acc-45aa-a3f9-56b42eb364ed)  
+ ![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/d90ba8b4-3bb1-422c-858f-cf2de0f3fa7f)
+
 
 A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page contained the command injection vulnerability
 POC  
@@ -125,10 +128,12 @@ Using a curl command
 curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward_url": "http://127.0.0.1:80/login","proxy_response": True,"insecure_tls": false,"expand_path": true,"capacity": 250}'
 ```
  or we can edit our existing basket from the basket configuration page
- ![damn](https://github.com/0xRoqeeb/writeups/assets/49154037/f501ad73-66ec-474e-bf2f-db936cfa8363)
+
+![damn](https://github.com/0xRoqeeb/writeups/assets/49154037/cf15037c-c400-4c14-8985-23dab848265c)
 
 trying to access the login page from the browser gives us this response, so we'll have to use curl from here
-![2023-07-25_08-14](https://github.com/0xRoqeeb/writeups/assets/49154037/a6d098d7-106f-48fd-b1b9-10d61294e188)
+![2023-07-25_08-14](https://github.com/0xRoqeeb/writeups/assets/49154037/467fed24-5dab-4eea-ba89-d16fe65f6443)
+
 
 # Exploitation
 Getting a reverse shell
@@ -182,15 +187,18 @@ now we have an interactive shell.
 Once we get initial access the road to root on sau is a piece of cake
 
 running the command sudo -l to see the commands our current user can run
-![2023-07-25_08-19](https://github.com/0xRoqeeb/writeups/assets/49154037/b0687b33-f3e4-474e-af63-901892f95980)  
+ ![2023-07-25_08-19](https://github.com/0xRoqeeb/writeups/assets/49154037/42af050d-2232-49e5-ae63-477b543f9966)
+
 we can run */usr/bin/systemctl status trail.service* as root and **NOPASSWD** means we can invoke the sudo command without a password  
 I checked gtfobins for the binary we have access to and luckily there's an entry for [systemctl](https://gtfobins.github.io/gtfobins/systemctl/)  
 
-![2023-07-25_08-25_1](https://github.com/0xRoqeeb/writeups/assets/49154037/29ad70a9-90ff-4308-86ac-5a93df524b7f)  
+ ![2023-07-25_08-25_1](https://github.com/0xRoqeeb/writeups/assets/49154037/e15e2ac0-857f-4213-8296-6c3bed8c0223)
+
 Let's run the command ```sudo /usr/bin/systemctl status trail.service```
 and input “!sh” to spawn a shell
 
-![2023-07-25_08-29](https://github.com/0xRoqeeb/writeups/assets/49154037/af301225-b263-45ec-94c9-b699ecb2573f)   
+ ![2023-07-25_08-29](https://github.com/0xRoqeeb/writeups/assets/49154037/91a6e8f4-f1fb-4cde-bd65-5e3c2b083e94)
+ 
 and we're root:)
 
 
