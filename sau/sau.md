@@ -92,7 +92,7 @@ POST /api/baskets/{name} API with payload - {"forward_url": "http://127.0.0.1:80
 ```
 
 It turns out that the */api/baskets/name* and */baskets/name* are the  API endpoints vulnerable to unauthenticated SSRF.
-Requests sent to */baskets/name* url will be reflected on the url in the ***forward_url** parameter  
+Requests sent to */baskets/name* url will be reflected on the url in the **forward_url** parameter  
 
 you can do this with a curl command
 
