@@ -5,7 +5,7 @@ Hello welcome to my first-ever published writeup,Today we'll be rooting and easy
 Let's go
 # Information Gathering
 ## Nmap
-i used nmap to scan the ip address with th
+i used nmap to scan the ip address with this command
 ```
 nmap -sC -sV 10.10.11.224 -p- -vvv -T3 -oN nmap
 ```
