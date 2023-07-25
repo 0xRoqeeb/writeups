@@ -63,7 +63,8 @@ PORT      STATE    SERVICE REASON      VERSION
 ```
 I will start enumeration from port 55555, from our scan we can see there's a webserver running on that port  
 i opened it in my web browser and there's a webapp called request baskets, on the bottom left there's a version number
-![homepage](https://github.com/0xRoqeeb/writeups/assets/49154037/5e98fb0e-a7ff-41d3-9512-da0b43de3894)
+![homepage](https://github.com/0xRoqeeb/writeups/assets/49154037/0be33d47-172b-4250-90f2-3ae4d4bd558d)
+
 
 i started poking around the site to find out how it works, it's an application that allows you to create a basket which gives you a url and any request made to that url will be collected in your basket hence the name requests basket  
 ![2023-07-25_16-22](https://github.com/0xRoqeeb/writeups/assets/49154037/c26f91bd-a255-4166-aa77-929f6eb2d1ae)  
@@ -97,7 +98,8 @@ curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward
 ```
 
 but i'll be doing it directly from the web application, to do that we navigate to our baskets page and click on the settings icon top right
-![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/d181f742-6a23-4fa0-84e5-889fb4bf1c7f)
+![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/f017b677-84d7-49a5-ab37-1bfb6e5edd26)
+
 
 on the configuration page we set the fields as follows:-    
 ***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward our requests from the basket url to the hidden webpage  
@@ -109,7 +111,8 @@ on the configuration page we set the fields as follows:-
 after that click apply to save changes
 
 now we access our basket through the url again and this time we're seeing something different we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
-![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/81dda296-d4cb-4674-8582-11e69860ef24) 
+![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/4565fc37-6acc-45aa-a3f9-56b42eb364ed)  
+
 A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page contained the command injection vulnerability
 POC  
 ```console
