@@ -105,7 +105,7 @@ but i'll be doing it directly from the web application, to do that we navigate t
 
 
 on the configuration page we set the fields as follows:-    
-***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward our requests from the basket url to the hidden webpage  
+***Forward URL***:*http://127.0.0.1:80/* (to reveal any internal websites, this field will forward our requests from the basket url to the hidden webpage)  
 
 ***Proxy Response*** : *true* ( i set this field to false as the POC stated but i didn't get a response, it only made sense to set it to true)  
 ***Expand Forward Path*** : *true*  
@@ -114,7 +114,7 @@ on the configuration page we set the fields as follows:-
 
 after that click apply to save changes
 
-now we access our basket through the url again and this time we're seeing something different we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
+now we access our basket through the url again and this time we're seeing something different, we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
  ![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/d90ba8b4-3bb1-422c-858f-cf2de0f3fa7f)
 
 
