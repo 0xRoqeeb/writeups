@@ -118,7 +118,7 @@ now we access our basket through the url again and this time we're seeing someth
  ![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/d90ba8b4-3bb1-422c-858f-cf2de0f3fa7f)
 
 
-A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page contained the command injection vulnerability
+A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page contained the command injection vulnerability  
 POC  
 ```console
 curl 'http://hostname:8338/login' --data 'username=;`id > /tmp/bbq`'
