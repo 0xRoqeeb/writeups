@@ -92,4 +92,22 @@ curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward
 but i'll be doing it directly from the web application, to do that we navigate to out basket page and click on the settings icon top right
 ![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/d181f742-6a23-4fa0-84e5-889fb4bf1c7f)
 
-on the configuration page
+on the configuration page we set the fields as follows
+***Forward URL***:*http://127.0.0.1:80/* to reveal any internal websites, this field will forward that website to our basket url
+***Proxy Response*** : *true* ( i set this field to false as the POC stated but i didn't get a response, it only made sense to set it to true)
+***Expand Forward Path*** : *true*
+![2023-07-25_11-20](https://github.com/0xRoqeeb/writeups/assets/49154037/80228ce7-f4a8-4c4d-b114-0077256fe719)
+
+after that click apply to save changes
+
+now we access our basket url again and this time we're seeing something different we come across a CSS starved website looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
+![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/81dda296-d4cb-4674-8582-11e69860ef24)
+
+
+
+
+
+
+
+
+
