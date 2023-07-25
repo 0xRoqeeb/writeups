@@ -119,11 +119,11 @@ now we access our basket through the url again and this time we're seeing someth
 
 
 A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page contained the command injection vulnerability  
-POC  
+[POC](https://huntr.dev/bounties/be3c5204-fbd9-448d-b97c-96a8d2941e87/) 
 ```console
 curl 'http://hostname:8338/login' --data 'username=;`id > /tmp/bbq`'
 ```
-since we'll be testing the */login* page let's update our *forward_url*   
+since we'll be testing the */login* page let's update our *forward_url* parameter  
 
 Using a curl command
 ```console
