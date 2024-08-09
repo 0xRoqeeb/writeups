@@ -1,4 +1,4 @@
-# Permx CTF Write-up
+# PermX Write-up
 by Roqeeb
 
 ## Introduction
