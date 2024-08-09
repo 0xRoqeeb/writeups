@@ -229,7 +229,7 @@ After running `linpeas.sh` and reviewing the results, several items caught my at
 
 
 
-- **Vhost Configuration Files**: The configuration files contained some email addresses that might be useful.
+- **Vhost Configuration Files**: The configuration files contained some addresses that might be useful.
 - ![intressant1](https://github.com/user-attachments/assets/0c7748d0-9df1-4e36-a3be-07e5e9cdbf00)    ![interassant2](https://github.com/user-attachments/assets/462a899c-e2ff-46d4-8bd8-b639d86bf3af)
 
 
@@ -240,7 +240,7 @@ After running `linpeas.sh` and reviewing the results, several items caught my at
 - **Database Password**: Identified a database password that could be useful for accessing services or further escalation.
 
 
-I decided to follow the easier path of trying common passwords for known services:
+I decided to follow the easier path of trying the found passwords for passwprd reuse:
 ![configpass](https://github.com/user-attachments/assets/e538fa1a-df49-46bd-8ab2-9f056223d77d)
 
 1. **Attempting Password Reuse**:
