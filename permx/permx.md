@@ -1,8 +1,9 @@
 # Permx CTF Write-up
+by Roqeeb
 
 ## Introduction
 
-In this write-up, we detail the steps taken to compromise the "Permx" box from htb, the lab was straightforward and very beginner friendly ,this is a writeup of how i exploited it
+In this write-up, i covered the steps taken to compromise the "Permx" box from htb, the lab was straightforward and very beginner friendly ,this is a writeup of how i exploited it
 
 ### Target Overview
 
