@@ -293,7 +293,7 @@ i tried inserting null byte at the end of the file name maybe it'll trigger some
 ```
 log_file=%2froot%2froot.txt%00&analyze_log=
 ```
-i was about to open payload all the things then it occured to me command injection lmao, should be easily flagged so i appended ;ls
+i was about to open payload all the things then it occured to me to try a simple command injection, i was not not trying to bypass i was trying to br flagged,so i appended ;ls and surely enough it got flagged
 and we got the root flag
 
 ![nice2](https://github.com/user-attachments/assets/6ef6421d-0594-453b-b960-e090211c631b)
