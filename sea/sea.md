@@ -1,11 +1,14 @@
 # Sea HTB Write-Up
+by Roqeeb
 
 **Difficulty:** Easy  
 **IP Address:** 10.10.11.28
+This writeup might be a bit wordy here and there , and a bit on the nose on a particular aspect sometimes, that because i was writing it while solving the box
+enjoy
 
 ## Enumeration
 
-We'll begin by scanning the target IP address, `10.10.11.28`, to identify open ports and services running on the SEa box.
+We'll begin by scanning the target IP address, `10.10.11.28`, to identify open ports and services running on the Sea box.
 ## Enumeration
 
 As usual, I'll start by using `rustscan` in combination with `nmap` to quickly identify open ports and gather detailed service information.
