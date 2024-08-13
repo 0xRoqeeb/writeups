@@ -267,9 +267,12 @@ PORT     STATE  SERVICE    REASON       VERSION
 i tried logging in using the credentials amay:mychemicalromance, and it worked. no cause for alarm
 ### Discovering Another Web Service
 
+![home](https://github.com/user-attachments/assets/3b51e29a-e98a-404d-a79b-f331e3903d5d)
+
+
  I discovered another web service that appeared to be a system monitor for internal services. It displayed disk usage and had some system management functions. I was pretty exhausted at this point and wasn't eager to dive into testing yet another web service, so I started clicking buttons hoping for something useful.
 
-One of the options was "Analyse Files" on `access.log`, but it returned a huge amount of gibberish—definitely not something I wanted to sift through manually. I opened Burp Suite to intercept the requests, but realized my proxy wasn't working. It took me a moment to remember that I was port forwarding using Burp's default proxy port, so I had to create a new proxy for port 8081 and update Burp Suite accordingly.
+One of the options was "Analyse Files" on `access.log`, but it returned a huge amount of logs ,yeah i ain reading allat. I opened Burp Suite to intercept the requests, but realized my proxy wasn't working. It took me a moment to remember that I was port forwarding using Burp's default proxy port, so I had to create a new proxy for port 8081 and update Burp Suite accordingly.
 
 Once I intercepted the request, I noticed something interesting:
 
