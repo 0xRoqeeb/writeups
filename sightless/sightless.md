@@ -283,6 +283,11 @@ After port forwarding, I began monitoring the traffic on the debug port. On my s
 from inspect elements i was able to read the creds this ia a fun one
 
 
+
+https://github.com/user-attachments/assets/636c5bc4-afc2-4313-a622-6b8552239b8a
+
+
+
 ###Logging In on froxlor
 
 Using the captured credentials, I logged in and accessed the dashboard.
