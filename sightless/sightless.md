@@ -276,6 +276,8 @@ ssh -L 8080:127.0.0.1:8080 \
 ```
 I used this method because the debugging port changes periodically. When forwarding these ports, it’s crucial to add them to your Chrome target discovery hosts quickly as it switches to a new port.
 
+you dont have to portforward everything to a new port, you can map all the chnaging ports to 8080, so you just have to inspect one port in your chrome debugger
+
 Monitoring Traffic
 After port forwarding, I began monitoring the traffic on the debug port. On my second attempt, I observed that the admin was typing their password
 from inspect elements i was able to read the creds this ia a fun one
