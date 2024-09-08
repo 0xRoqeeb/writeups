@@ -118,10 +118,9 @@ I looked up known vulnerabilities and found CVE-2022-0944, which describes a cri
 
 ### Exploitation
 
-I spent some time trying to understand and exploit this vulnerability. After some trial and error with various payloads, several internal server error 500, i finally got ont that worked
+I spent some time trying to understand and exploit this vulnerability. After some trial and error with various payloads, several internal server error 500, i finally got one that worked
 
-
-![2024-09-08_11-33](https://github.com/user-attachments/assets/31ef9a93-42e5-4b1a-b032-588cb82b7ab0)
+![2024-09-08_11-33](https://github.com/user-attachments/assets/73590400-7a76-45f5-8d1e-68f13a7faec2)
 
 
 1. **Create a New Connection:**
@@ -168,6 +167,128 @@ A few minutes later, both passwords were cracked.
 
 Tried micheal's password with SSH to 10.10.11.32:
 This worked and got access outside the Docker container. Found the user.txt flag.
+
+## New Host and User Discovery
+
+On the new host, there are three users:
+
+```bash
+cat /etc/passwd | grep bash
+root:x:0:0:root:/root:/bin/bash
+michael:x:1000:1000:michael:/home/michael:/bin/bash
+john:x:1001:1001:,,,:/home/john:/bin/bash
+```
+After checking usual folders without much success,i ran linpeas. It revealed some new subdomains: admin.sightless.htb and web1.sightless.htb. Accessing both of these subdomains redirected back to sightless.htb.
+
+Active Ports
+
+but on the other hand there are some interesting active ports:
+
+```bash
+╔══════════╣ Active Ports
+╚ https://book.hacktricks.xyz/linux-hardening/privilege-escalation#open-ports    
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:43481         0.0.0.0:*               LISTEN      -                   
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:39205         0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:33060         0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:3000          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.53:53           0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:3306          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:8080          0.0.0.0:*               LISTEN      -                   
+tcp        0      0 127.0.0.1:34673         0.0.0.0:*               LISTEN      -                   
+tcp6       0      0 :::22                   :::*                    LISTEN      -                   
+tcp6       0      0 :::21                   :::*                    LISTEN      -                   
+```
+this looks promising, i started to 8080 since it's usually a web service port, i tested it with curl and got some data back 
+```bash
+curl http://127.0.0.1:8080
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="robots" content="noindex, nofollow, noarchive"/>
+        <meta name="googlebot" content="nosnippet"/>
+        <link rel="icon" type="image/x-icon" href="templates/Froxlor/assets/img/icon.png">
+        <meta name="csrf-token" content="dcf69acdf251a256220aab9bbe21e707cc0f23c8" />
+        <!-- Assets  -->
+        <link rel="stylesheet" href="templates/Froxlor/build/assets/app-61450a15.css">
+        <script src="templates/Froxlor/build/assets/app-67d6acee.js" type="module"></script>
+snip---
+```
+so i set up port forwarding to view the webpage in a browser
+```bash
+ssh -L 8080:127.0.0.1:8080 micheal@10.10.11.32
+```
+Accessed 127.0.0.1:8080 and saw a Froxlor webpage, it was a login form
+![foxfor](https://github.com/user-attachments/assets/4ce2d526-67d6-46ba-b04b-1aa5a7d228a1)
+
+## Accessing the System Further
+
+After trying all available credentials (both `michael` and `root` with different usernames) without success.
+
+### Exploring Vulnerabilities
+
+I searched online for Froxlor vulnerabilities, but the available RCE exploits were all authenticated, which we did not have. SQL injection attempts also seemed unlikely to work.
+
+### Revisiting Linpeas Output
+
+Going back to the `linpeas` scan, I re-examined the results and noticed a command run by the user `john`:
+```bash
+/opt/google/chrome/chrome --allow-pre-commit-input --disable-background-networking --disable-client-side-phishing-detection --disable-default-apps --disable-dev-shm-usage --disable-hang-monitor --disable-popup-blocking --disable-prompt-on-repost --disable-sync --enable-automation --enable-logging --headless --log-level=0 --no-first-run --no-sandbox --no-service-autorun --password-store=basic --remote-debugging-port=0 --test-type=webdriver --use-mock-keychain --user-data-dir=/tmp/.org.chromium.Chromium.vjEYUV data:,
+```
+
+This command runs Chrome with various debugging and automation options enabled. Such a setup is typically used for automated testing or scripting, where a graphical user interface is not required. The configuration also includes options for remote debugging.
+
+### Finding a Solution
+
+Researching Chrome Remote Debugging led me to a [relevant exploitation guide](https://exploit-notes.hdks.org/exploit/linux/privilege-escalation/chrome-remote-debugger-pentesting/).
+
+I then launched Google Chrome to test this further:
+
+1. **Port Forwarding**: Made sure to forward the necessary internal ports:
+
+
+2. **Accessing Remote Debugging**: Opened Chrome and navigated to `chrome://inspect/#devices`.
+
+3. **Configure Ports**: Clicked on "Configure" and added all the internal ports discovered to ensure all potential access points were covered.
+
+4. **Inspecting Froxlor**: Went to the "Pages" section and clicked "Inspect" on the Froxlor interface.
+
+By following these steps, I was able to leverage Chrome’s remote debugging capabilities to gain further insight and potentially identify a way forward.
+
+## Port Forwarding and Remote Debugging
+
+To fully explore the internal services, I forwarded several ports from the remote host to my local machine:
+
+```bash
+ssh -L 8080:127.0.0.1:8080 \
+    -L 38607:127.0.0.1:38607 \
+    -L 40365:127.0.0.1:40365 \
+    -L 3306:127.0.0.1:3306 \
+    -L 3000:127.0.0.1:3000 \
+    -L 80:127.0.0.1:80 \
+    -L 33729:127.0.0.1:33729 \
+    -L 33060:127.0.0.1:33060 \
+    michael@10.10.11.32
+```
+I used this method because the debugging port changes periodically. When forwarding these ports, it’s crucial to add them to your Chrome target discovery hosts quickly as it switches to a new port.
+
+Monitoring Traffic
+After port forwarding, I began monitoring the traffic on the debug port. On my second attempt, I observed that the admin was typing their password
+from inspect elements i was able to read the creds this ia a fun one
+
+
+###Logging In on froxlor
+
+Using the captured credentials, I logged in and accessed the dashboard.
+
+Now that we have valid credentials, I can proceed to try the authenticated exploits we reviewed earlier.
+
+
+
 
 
 
