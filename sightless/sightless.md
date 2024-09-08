@@ -286,6 +286,50 @@ from inspect elements i was able to read the creds this ia a fun one
 Using the captured credentials, I logged in and accessed the dashboard.
 
 Now that we have valid credentials, I can proceed to try the authenticated exploits we reviewed earlier.
+none of them worked
+
+
+## Troubleshooting and Final Solution
+
+After spending a few hours trying different methods, I concluded that the box might be broken. However, I eventually figured out a workaround.
+
+### PHP-FPM Restart Command
+
+Under the **PHP** settings, specifically in the **PHP-FPM Versions** section, there was a field labeled **php-fpm restart command**. This command is executed whenever the PHP-FPM service is restarted. 
+
+The issue was that this field did not accept all payloads, and even the commands it did accept did not execute as expected. 
+
+### Workaround
+
+Given the constraints, I opted for a simpler approach:
+
+1. **Copying the Root Flag**: I copied the root flag to a location where I could access it.
+
+2. **Changing Permissions**: I modified the permissions of the copied flag to make it readable.
+
+![step1](https://github.com/user-attachments/assets/b3bb6d25-6ad7-46ac-a365-73f47ee0413e)
+click on the edit button
+
+![2](https://github.com/user-attachments/assets/0477559b-dbb3-416d-affc-557e8b4b35a7)
+
+put the command you want to be excuted and click on save, make sure you save
+
+![4](https://github.com/user-attachments/assets/d2bd54cc-2251-44ea-85ac-e8675d6d8587)
+then back to settings we open the php-fpm tab
+
+![y](https://github.com/user-attachments/assets/ab652415-2c55-4cef-9a45-5b1e491c0970)
+turn it off save it
+
+then wait for a few minutes for the service to stop completely, then turn it back on, then wait a few more minutes till you can see that the root flag has been copied to the location you chose, afte that you wont be able to read the file, you have to chnage it's permission, you have to repeat the whole steps so instead of copy command
+you use chmod 777 /home/bbbb or whatever you saved it as, wait a few minutes and you should be able to read the flag
+
+
+![rootflag](https://github.com/user-attachments/assets/151c5ba6-3e76-41b1-86cc-9d994fcac815)
+
+
+
+This approach allowed me to retrieve the root flag despite the limitations with the PHP-FPM restart command.
+
 
 
 
