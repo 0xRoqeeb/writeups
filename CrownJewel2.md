@@ -20,6 +20,8 @@ we first downloaded the files related to the incident. it was an archive, after 
 We have three `.evtx` files, namely `Application`, `Security`, and `System`.
 
 
+![files](https://github.com/user-attachments/assets/2381048b-4d41-4a6b-9d75-d20485eb692d)
+
 
 
 An EVTX file is a log file format used by the Windows Event Log service to store event logs. It is an acronym for "Event Log File"
@@ -39,7 +41,14 @@ since we're dealing with a service we should focus on the System.evtx log, where
 
 The first thing I did was open the `Service.evtx` file in Event Viewer, as we were looking for the most recent timestamp when the service started running. I filtered the logs by **Event ID 7036**, which specifically logs service state changes in Windows, such as starting, stopping, pausing, or resuming.
 
+![2024-09-10_06-58](https://github.com/user-attachments/assets/0ab3c528-2dc4-4f04-8379-15b4a98f626a)
+
+![2024-09-10_06-59](https://github.com/user-attachments/assets/49adda3f-5c91-4106-be48-903033dbbd33)
+
+
 After filtering by Event ID 7036, I used `Ctrl + F` to search for the keyword **"Shadow copy"** in the **General** field. This helped identify the latest logged information about the service. To pinpoint the exact time the service was manipulated, I checked the **Properties** of the event and found the **System Time**, which provided the precise timestamp of the event.
+![2024-09-10_07-21](https://github.com/user-attachments/assets/5af8ba50-5fa6-48be-8c47-96524accda58)
+
 
 `2024-05-15 05:39:55`
 
@@ -49,6 +58,9 @@ Identify the full path of the dumped NTDS file.
 --
 To identify the full path of the dumped NTDS file, we focused on the `Application.evtx` log. Using `Ctrl + F`, we searched through the logs for relevant keywords. We found the location of the dumped NTDS file at:
 
+![2024-09-10_07-45](https://github.com/user-attachments/assets/767210be-9b8c-410d-a3c5-55fa392ee397)
+
+
 **`C:\Windows\Temp\dump_tmp\Active Directory\ntds.dit`**
 
 ### Question 3
@@ -56,6 +68,8 @@ When was the database dump created on the disk?
 ----
 
 To determine when the database dump was created on the disk, we reviewed the `Application.evtx` log. By clicking on the relevant log entries and examining the **Details** section, we identified two entries for the dump: one for the creation of the database and another for the detach operation. We were interested in the creation entry, which indicated that the database dump was created on:
+![2024-09-10_07-51](https://github.com/user-attachments/assets/816f574c-8392-4884-b8a6-11a00d25d43b)
+
 
 **2024-05-15 05:39:56**
 
@@ -64,6 +78,8 @@ When was the newly dumped database considered complete and ready for use?
 ----
 To find out when the newly dumped database was considered complete and ready for use, we looked for the detach operation in the logs. The timestamp for the detach operation, indicating that the database was finalized and ready for use, was:
 
+![2024-09-10_07-57](https://github.com/user-attachments/assets/7c2a1a85-9862-4a31-93c4-993a36901b7f)
+
 **2024-05-15 05:39:58**
 
 
@@ -71,6 +87,9 @@ To find out when the newly dumped database was considered complete and ready for
 Event logs use event sources to track events coming from different sources. Which event source provides database status data like creation and detachment?
 ----
 **`esent`**
+
+
+![2024-09-10_08-02](https://github.com/user-attachments/assets/ce109eff-7193-4f6c-b59f-b1d3ed830797)
 
 This information was found under the **Source** tab in Event Viewer.
 
@@ -84,6 +103,9 @@ When ntdsutil.exe is used to dump the database, it enumerates certain user group
 
 To track the malicious session, we focused on the Security log. Using `Ctrl + F` with the keyword **"ntdsutil.exe"**, we identified that the enumeration was performed with targets including the **Administrators** and **Backup Operators** groups. The Logon ID associated with this activity is:
 
+![2024-09-10_08-15](https://github.com/user-attachments/assets/05d2db9c-f7b8-4836-8b0f-24723598505d)
+
+
 **0x8de3d**
 
 ### Question 7.
@@ -92,6 +114,7 @@ To track the malicious session, we focused on the Security log. Using `Ctrl + F`
 Now you are tasked to find the Login Time for the malicious Session. Using the Logon ID, find the Time when the user logon session started.
 
 To find the login time for the malicious session, we used the Logon ID `0x8de3d`. We searched for this Logon ID in the Security log and sorted the results by date and time to identify the earliest logon entry. The time when the user logon session started was found to be:
+![2024-09-10_09-00](https://github.com/user-attachments/assets/c33aa801-6431-4d08-821a-05d69d7760da)
 
 **2024-05-15 05:36:31**
 
