@@ -96,3 +96,12 @@ To find the login time for the malicious session, we used the Logon ID `0x8de3d`
 **2024-05-15 05:36:31**
 
 
+
+In this case, we managed to piece together what happened with the NTDS database dump. By digging through the logs, we found when the database was created and when it was done, identified the event source (`esent`), and tracked the malicious session using the Logon ID. We also saw how `ntdsutil.exe` was targeting the `Administrators` and `Backup Operators` groups.
+
+All in all, we’ve put together a solid timeline of the attack, giving us a clear picture of how things went down. Now that we’ve got a handle on what happened.
+
+On to the next challenge!
+
+
+
