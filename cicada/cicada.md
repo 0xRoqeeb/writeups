@@ -478,6 +478,10 @@ cicada\emily.oscars
 
 I used Evil-WinRM to establish a remote session as `emily.oscars`
 
+After gaining remote access, I checked the users on the system and discovered two accounts:
+
+
+
 
 
 
