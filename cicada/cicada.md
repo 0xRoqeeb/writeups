@@ -9,6 +9,8 @@ In this write-up, we'll dive into the Cicada HTB box,This is an easy rated box w
 With the SeBackupPrivilege granted to my user, I was able to back up crucial system files, including the SYSTEM and SAM registries. This step opened the door to extracting hashed credentials for the Administrator account. Using those hashes, I successfully authenticated as the Administrator and took full control of the system. Let’s go through the steps I took to conquer this box and share some insights along the way.
 
 ## Reconnaissance
+
+Kicked things off with a rustscan and nmap scan, and found some interesting ports. The machine is a Windows server called **CICADA-DC**, and it's part of the **cicada.htb** domain, which I’ve added to my hosts file. No web services to poke at, so I’ll focus on **LDAP**, **SMB**, and **Kerberos** enumeration. The goal here is to gather some user and group info, maybe even dig into a few files.
 ```
 rustscan -a 10.10.11.35 -- -Pn -sC -sV -vvv
 [!] File limit is lower than default batch size. Consider upping with --ulimit. May cause harm to sensitive servers
@@ -29,53 +31,6 @@ Open 10.10.11.35:56342
 [>] The Nmap command to be run is nmap -Pn -sC -sV -vvv -vvv -p 53,88,135,139,389,445,464,593,636,5985,55889,56342 10.10.11.35
 
 Starting Nmap 7.94SVN ( https://nmap.org ) at 2024-09-29 00:20 WAT
-NSE: Loaded 156 scripts for scanning.
-NSE: Script Pre-scanning.
-NSE: Starting runlevel 1 (of 3) scan.
-Initiating NSE at 00:20
-Completed NSE at 00:20, 0.00s elapsed
-NSE: Starting runlevel 2 (of 3) scan.
-Initiating NSE at 00:20
-Completed NSE at 00:20, 0.00s elapsed
-NSE: Starting runlevel 3 (of 3) scan.
-Initiating NSE at 00:20
-Completed NSE at 00:20, 0.00s elapsed
-Initiating Parallel DNS resolution of 1 host. at 00:20
-Completed Parallel DNS resolution of 1 host. at 00:20, 0.04s elapsed
-DNS resolution of 1 IPs took 0.04s. Mode: Async [#: 1, OK: 0, NX: 1, DR: 0, SF: 0, TR: 1, CN: 0]
-Initiating Connect Scan at 00:20
-Scanning 10.10.11.35 [12 ports]
-Discovered open port 53/tcp on 10.10.11.35
-Discovered open port 445/tcp on 10.10.11.35
-Discovered open port 135/tcp on 10.10.11.35
-Discovered open port 5985/tcp on 10.10.11.35
-Discovered open port 56342/tcp on 10.10.11.35
-Discovered open port 464/tcp on 10.10.11.35
-Discovered open port 593/tcp on 10.10.11.35
-Discovered open port 389/tcp on 10.10.11.35
-Discovered open port 139/tcp on 10.10.11.35
-Discovered open port 88/tcp on 10.10.11.35
-Discovered open port 55889/tcp on 10.10.11.35
-Discovered open port 636/tcp on 10.10.11.35
-Completed Connect Scan at 00:20, 0.36s elapsed (12 total ports)
-Initiating Service scan at 00:20
-Scanning 12 services on 10.10.11.35
-Completed Service scan at 00:21, 57.48s elapsed (12 services on 1 host)
-NSE: Script scanning 10.10.11.35.
-NSE: Starting runlevel 1 (of 3) scan.
-Initiating NSE at 00:21
-NSE Timing: About 99.94% done; ETC: 00:22 (0:00:00 remaining)
-Completed NSE at 00:22, 40.10s elapsed
-NSE: Starting runlevel 2 (of 3) scan.
-Initiating NSE at 00:22
-Completed NSE at 00:22, 5.61s elapsed
-NSE: Starting runlevel 3 (of 3) scan.
-Initiating NSE at 00:22
-Completed NSE at 00:22, 0.00s elapsed
-Nmap scan report for 10.10.11.35
-Host is up, received user-set (0.17s latency).
-Scanned at 2024-09-29 00:20:40 WAT for 104s
-
 PORT      STATE SERVICE       REASON  VERSION
 53/tcp    open  domain        syn-ack Simple DNS Plus
 88/tcp    open  kerberos-sec  syn-ack Microsoft Windows Kerberos (server time: 2024-09-29 06:20:47Z)
@@ -197,20 +152,6 @@ Host script results:
 |   3:1:1: 
 |_    Message signing enabled and required
 |_clock-skew: 6h59m58s
-
-NSE: Script Post-scanning.
-NSE: Starting runlevel 1 (of 3) scan.
-Initiating NSE at 00:22
-Completed NSE at 00:22, 0.00s elapsed
-NSE: Starting runlevel 2 (of 3) scan.
-Initiating NSE at 00:22
-Completed NSE at 00:22, 0.00s elapsed
-NSE: Starting runlevel 3 (of 3) scan.
-Initiating NSE at 00:22
-Completed NSE at 00:22, 0.00s elapsed
-Read data files from: /usr/bin/../share/nmap
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 105.39 seconds
 
 ```
 
