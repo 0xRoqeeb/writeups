@@ -480,6 +480,48 @@ I used Evil-WinRM to establish a remote session as `emily.oscars`
 
 After gaining remote access, I checked the users on the system and discovered two accounts:
 
+```
+ Directory: C:\Users
+
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+d-----         8/26/2024   1:10 PM                Administrator
+d-----         8/22/2024   2:22 PM                emily.oscars.CICADA
+d-r---         3/14/2024   3:45 AM                Public
+```
+Our goal is to escalate privileges to the `Administrator` account. 
+
+I then checked the current privileges for the `emily.oscars` user:
+
+```powershell
+*Evil-WinRM* PS C:\Users\emily.oscars.CICADA\Documents> whoami /priv
+
+PRIVILEGES INFORMATION
+----------------------
+
+Privilege Name                Description                    State
+============================= ============================== =======
+SeBackupPrivilege             Back up files and directories  Enabled
+SeRestorePrivilege            Restore files and directories  Enabled
+SeShutdownPrivilege           Shut down the system           Enabled
+SeChangeNotifyPrivilege       Bypass traverse checking       Enabled
+SeIncreaseWorkingSetPrivilege Increase a process working set Enabled
+
+```
+
+Notably, the SeBackupPrivilege and SeRestorePrivilege were enabled, which can often be leveraged for privilege escalation.
+
+SeBackupPrivilege
+
+The SeBackupPrivilege allows a user to bypass file security permissions when backing up files. This means that the user can read files and directories regardless of the permissions set on them. This privilege is typically granted to backup operators and can be exploited for privilege escalation, as it enables access to sensitive files that would otherwise be restricted.
+
+
+SeRestorePrivilege
+
+The SeRestorePrivilege allows a user to restore files and directories, even if they do not have explicit permissions to access those files. This privilege can be used to overwrite existing files or create new ones in protected locations, making it useful for restoring system configurations or gaining access to sensitive areas of the file system.
+
+we'll be focusing on SeBackupPriviledge for escalation
 
 
 
